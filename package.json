@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "scripts": {
     "start": "node app.js"
   },
@@ -7,5 +8,8 @@
     "escpos": "^3.0.0-alpha.6",
     "escpos-usb": "^3.0.0-alpha.4",
     "express": "^4.21.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
   }
 }
