@@ -5,6 +5,7 @@
   "outputDirectory": "public",
   "routes": [
     {
+      "src": "/(.*)",
       "methods": ["POST"],
       "headers": {
         "Access-Control-Allow-Origin": "*",
