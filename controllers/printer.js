@@ -4,6 +4,9 @@ import escposUSB from 'escpos-usb'
 escpos.USB = escposUSB
 
 export class PrinterController {
+  static async test (req, res) {
+    res.send(":)")
+  }
   static async print (req, res) {
     const { print } = req.body
 
