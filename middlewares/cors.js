@@ -1,17 +1,26 @@
 import cors from 'cors'
 
 const ACCEPTED_ORIGINS = [
-  'https://quetzal-zeta.vercel.app/',
-  'https://t-xochilt.vercel.app/',
-  'http://192.168.1.39:3000'
+  'https://t-xochilt.vercel.app',
+  'http://192.168.1.39:8080',
+  'http://localhost:8080',
+  'http://192.168.1.39:3000',
+  'http://localhost:3000'
 ]
 
-export const corsMiddleware = cors({
+export const corsMiddleware  = ({ acceptedOrigings = ACCEPTED_ORIGINS } = {}) => cors({
   origin: (origin, callback) => {
-    if (!origin || ACCEPTED_ORIGINS.includes(origin)) {
+    if (acceptedOrigings.includes(origin)) {
       return callback(null, true)
-    } else {
-      return callback(new Error('Not allowed by CORS'))
     }
-  }
+
+    if (!origin) {
+      return callback(null, true)
+    }
+
+    return callback(new Error('Not allowed by CORS'))
+  },
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 })
