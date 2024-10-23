@@ -78,6 +78,15 @@ app.post('/printers', (req, res) => {
     device.open(function () {
       printer
         .font('a')
+        .align('ct')
+        .style('a')
+        .size(1)
+        .text("RESTAURANTE MEXICANO EL PASTOR")
+        .text("Calle de la Vid, 1")
+        
+      printer
+        .text("")
+        .font('a')
         .align('lt')
         .style('a')
         .size(1)
