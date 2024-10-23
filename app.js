@@ -1,14 +1,16 @@
 const express = require('express')
 const escpos = require('escpos');
+escpos.USB = require('escpos-usb')
 const cors = require('cors')
-escpos.USB = require('escpos-usb');
 
+const device = new escpos.USB()
+const printer = new escpos.Printer(device)
 
-// intenta hacerlo sin escpos-usb
+var bodyParser = require('body-parser')
 
 const app = express()
 app.use(cors())
-app.use(express.json())
+app.use(bodyParser.json())
 app.disable('x-powered-by')
 
 app.get('/printers', (req, res) => {
@@ -16,11 +18,46 @@ app.get('/printers', (req, res) => {
 })
 
 app.get('/printers/list', (req, res) => {
-  const printer = escpos.USB.findPrinter()
-  const deviceDescriptor = printer[0].deviceDescriptor
-  const idVendor = deviceDescriptor.idVendor
-  const idProduct = deviceDescriptor.idProduct
-  res.send(`${idVendor}, ${idProduct}`)
+  res.json(
+    { status: 'success' }
+  )
+  device.open(function () {
+    printer
+      .font('a')
+      .align('lt')
+      .style('b')
+      .size(1)
+      .text("FECHA: 04/10/2024")
+      .text("MESA: Mesa 11")
+      .text("CAMARERO: Liderman")
+      .tableCustom(
+        [
+          { text: "CANT", align: 'LEFT', width: 0.1 },
+          { text: "DESC", align: 'CENTER', width: 0.5 },
+          { text: "P.UNIT", align: 'RIGHT', width: 0.2 },
+          { text: "P.TOTAL", align: 'RIGHT', width: 0.2 },
+        ]
+      )
+      .tableCustom(
+        [
+          { text: "1", align: 'LEFT', width: 0.1 },
+          { text: "Quesadilla Pibil", align: 'CENTER', width: 0.5 },
+          { text: "10.90", align: 'RIGHT', width: 0.2 },
+          { text: "10.90", align: 'RIGHT', width: 0.2 },
+        ]
+      )
+      .tableCustom(
+        [
+          { text: "TOTAL: 31.80"}
+        ],
+        { size: [1, 1]}
+      )
+      .text("")
+      .text("")
+      .text("")
+      .cut()
+      .close();
+  });
 })
 
 app.post('/printers', (req, res) => {
@@ -34,43 +71,59 @@ app.post('/printers', (req, res) => {
   }
 
   const { template } = print
-
+  template.header.forEach((item) => {
+    console.log(item.text)
+  })
   try {
-    const thisPrinter = escpos.USB.findPrinter()
-    const deviceDescriptor = thisPrinter[0].deviceDescriptor
-    const idVendor = deviceDescriptor.idVendor
-    const idProduct = deviceDescriptor.idProduct
+    device.open(function () {
+      printer
+        .font('a')
+        .align('lt')
+        .style('a')
+        .size(1)
 
-    const device = new escpos.USB()
-    const printer = new escpos.Printer(device)
-
-    device.open((error) => {
-      if (error) {
-        return res.status(500).json({
-          code: 500,
-          message: 'Error al conectar con la impresora'
-        })
-      }
-
-      printer.text(template.header)
-      template.items.forEach(item => {
-        printer.tableCustom([
-          { text: item.quantity, align: 'LEFT', width: 0.1 },
-          { text: item.description, align: 'CENTER', width: 0.5 },
-          { text: item.unitPrice, align: 'RIGHT', width: 0.2 },
-          { text: item.totalPrice, align: 'RIGHT', width: 0.2 }
-        ])
+      template.header.forEach((item) => {
+        printer.text(item.text)
       })
-      printer.text(template.footer)
-      printer.cut()
-      printer.close()
-      
-      res.status(200).json({
-        code: 200,
-        message: 'Ticket enviado a la impresora'
-      })
-    })
 
+      printer
+        .text("")
+        .tableCustom(
+          [
+            { text: "CANT", align: 'LEFT', width: 0.1 },
+            { text: "DESC", align: 'LEFT', width: 0.5 },
+            { text: "P.UNIT", align: 'RIGHT', width: 0.2 },
+            { text: "P.TOTAL", align: 'RIGHT', width: 0.2 },
+          ]
+        )
+
+      template.items.forEach((item) => {
+        const [quantityObj, descriptionObj, unitPriceObj, totalPriceObj] = item
+        printer.tableCustom(
+          [
+            { text: quantityObj.quantity, align: 'LEFT', width: 0.1 },
+            { text: descriptionObj.description, align: 'LEFT', width: 0.5 },
+            { text: unitPriceObj.unitPrice, align: 'RIGHT', width: 0.2 },
+            { text: totalPriceObj.totalPrice, align: 'RIGHT', width: 0.2 },
+          ]
+        )
+      })
+        
+      printer
+        .text("")
+        .style('b')
+        .size(1,1)
+        .tableCustom(
+          [
+            { text: template.footer}
+          ],
+          { size: [1, 1]}
+        )
+        .text("")
+        .text("")
+        .cut()
+        .close();
+    });
   } catch (error) {
     console.error('Error al imprimir', error)
     res.status(500).json({
