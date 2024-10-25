@@ -82,7 +82,8 @@ app.post('/printers', (req, res) => {
         .style('a')
         .size(1)
         .text("RESTAURANTE MEXICANO EL PASTOR")
-        .text("Calle de la Vid, 1")
+        .text("606 97 07 57")
+        .text("mexicanoelpastor.es")
         
       printer
         .text("")
